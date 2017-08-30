@@ -1,0 +1,44 @@
+<script type="text/javascript">
+    const check_urls = {{ 'true' if config.CROQUEMORT else 'false' }};
+    const check_urls_ignore = {{ config.CROQUEMORT_IGNORE|tojson }};
+    const port = location.port ? `:${location.port}` : '';
+    const domain = `${location.hostname}${port}`;
+    const ignore = [domain].concat(check_urls_ignore || []);
+    const checkurl = "{{ url_for('api.checkurl') }}";
+
+    var linkchecker = {
+        checkUrl: function(url, group, resource_el) {
+            if (!check_urls) return;
+            const el = resource_el.querySelector('.format-label');
+            if (!ignore.some(domain => url.origin.endsWith(domain))) {
+                if (url.protocol.startsWith('ftp')) {
+                    el.classList.add('format-label-warning');
+                    // TODO i18n
+                    el.setTooltip('The server may be hard to reach (FTP).', true);
+                } else {
+                    const urlToCheck = url.href;
+                    fetch(`${checkurl}?url=${urlToCheck}&group=${group}`)
+                    .then(res => {
+                        if (!res.ok) throw Error(res);
+                        el.classList.add('format-label-success');
+                    })
+                    .catch(error => {
+                        switch (error.status) {
+                            case 404:
+                                el.classList.add('format-label-warning');
+                                // TODO i18n
+                                el.setTooltip('The resource cannot be found.', true);
+                                break;
+                            case 503:
+                                break;
+                            default:
+                                el.classList.add('format-label-danger');
+                                // TODO i18n
+                                el.setTooltip('The server cannot be found.', true);
+                        }
+                    });
+                }
+            }
+        }
+    }
+</script>
