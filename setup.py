@@ -96,6 +96,11 @@ setup(
     include_package_data=True,
     install_requires=install_requires,
     tests_require=tests_require,
+    entry_points={
+        'udata.linkcheckers': [
+            "croquemort=udata_croquemort.checker:CroquemortLinkChecker",
+        ]
+    },
     license='LGPL',
     use_2to3=True,
     keywords='udata croquemort',

@@ -21,7 +21,13 @@ ERROR_LOG_MSG = 'Unable to connect to croquemort'
 TIMEOUT_LOG_MSG = 'Timeout connecting to Croquemort'
 
 
+class UnreachableLinkChecker(Exception):
+    pass
+
+
 def is_pending(response):
+    if not response:
+        return True
     if response.status_code == httplib.NOT_FOUND:
         return True
     try:
@@ -37,7 +43,7 @@ def check_url(url, group=None):
     """
     CROQUEMORT = current_app.config.get('CROQUEMORT')
     if CROQUEMORT is None:
-        return {'error': 'Check server not configured.'}, {}
+        raise UnreachableLinkChecker('Check server not configured')
     check_url = '{url}/check/one'.format(url=CROQUEMORT['url'])
     delay = CROQUEMORT.get('delay', DEFAULT_DELAY)
     retry = CROQUEMORT.get('retry', DEFAULT_RETRY)
@@ -47,46 +53,36 @@ def check_url(url, group=None):
                                  data=json.dumps(params),
                                  timeout=TIMEOUT)
     except requests.Timeout:
-        log.error(TIMEOUT_LOG_MSG, exc_info=True)
-        return {}, httplib.SERVICE_UNAVAILABLE
-    except requests.RequestException:
+        raise UnreachableLinkChecker(TIMEOUT_LOG_MSG)
+    except requests.RequestException as e:
         log.error(ERROR_LOG_MSG, exc_info=True)
-        return {}, httplib.SERVICE_UNAVAILABLE
+        raise UnreachableLinkChecker('{}: {}'.format(ERROR_LOG_MSG, e))
     try:
         url_hash = response.json()['url-hash']
         retrieve_url = '{url}/url/{url_hash}'.format(
             url=CROQUEMORT['url'], url_hash=url_hash)
     except ValueError:
-        return {}, httplib.SERVICE_UNAVAILABLE
-    try:
-        response = requests.get(retrieve_url, params=params, timeout=TIMEOUT)
-    except requests.Timeout:
-        log.error(TIMEOUT_LOG_MSG, exc_info=True)
-        return {}, httplib.SERVICE_UNAVAILABLE
-    except requests.RequestException:
-        log.error(ERROR_LOG_MSG, exc_info=True)
-        return {}, httplib.SERVICE_UNAVAILABLE
+        raise UnreachableLinkChecker('Wrong response for retrieve_url')
+    response = None
     attempts = 0
     while is_pending(response):
         if attempts >= retry:
             msg = ('We were unable to retrieve the URL after'
                    ' {attempts} attempts.').format(attempts=attempts)
-            return {'error': msg}, {}
+            raise UnreachableLinkChecker(msg)
         try:
-            response = requests.get(retrieve_url,
-                                    params=params,
-                                    timeout=TIMEOUT)
+            response = requests.get(retrieve_url, timeout=TIMEOUT)
         except requests.Timeout:
-            log.error(TIMEOUT_LOG_MSG, exc_info=True)
-            return {}, httplib.SERVICE_UNAVAILABLE
+            raise UnreachableLinkChecker(TIMEOUT_LOG_MSG)
         except requests.RequestException:
             log.error(ERROR_LOG_MSG, exc_info=True)
-            return {}, httplib.SERVICE_UNAVAILABLE
+            raise UnreachableLinkChecker('{}: {}'.format(ERROR_LOG_MSG, e))
         time.sleep(delay)
         attempts += 1
-    return {}, response.json()
+    return response.json()
 
 
+# TODO still needed?
 def check_url_from_cache(url, group=None):
     """Check the given URL against the cache of a Croquemort server.
 
@@ -112,6 +108,7 @@ def check_url_from_cache(url, group=None):
         return {}, response.json()
 
 
+# TODO still needed?
 def check_url_from_group(group):
     """Check the given group against the cache of a Croquemort server.
 
