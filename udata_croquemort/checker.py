@@ -36,7 +36,7 @@ class CroquemortLinkChecker(object):
 
         Returns
         -------
-        dict
+        dict or None
             The formatted response from the linkchecker, like so:
             {
                 'check:url': 'https://example.com',
@@ -44,10 +44,12 @@ class CroquemortLinkChecker(object):
                 'check:available': True,
                 'check:date': datetime.datetime(2017, 9, 4, 11, 13, 8, 888288),
             }
-            Or in case of failure:
+            Or in case of failure (in udata-croquemort, not croquemort):
             {
                 'check:error': 'Something went terribly wrong.'
             }
+            Or in case of failure in croquemort:
+            None
         """
         log.debug('Checking resource w/ URL %s' % resource.url)
         # XXX: is this a sane and reliable way to get the dataset?
