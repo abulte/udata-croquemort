@@ -11,7 +11,8 @@ log = logging.getLogger(__name__)
 
 
 class CroquemortLinkChecker(object):
-    """Croquemort link checker implementation
+    """Croquemort link checker implementation.
+
     The main interface is the `check` method.
     """
 

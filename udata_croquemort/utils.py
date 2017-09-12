@@ -43,7 +43,7 @@ def check_url(url, group=None):
     """
     CROQUEMORT = current_app.config.get('CROQUEMORT')
     if CROQUEMORT is None:
-        raise UnreachableLinkChecker('Check server not configured')
+        raise UnreachableLinkChecker('Croquemort server not configured')
     check_url = '{url}/check/one'.format(url=CROQUEMORT['url'])
     delay = CROQUEMORT.get('delay', DEFAULT_DELAY)
     retry = CROQUEMORT.get('retry', DEFAULT_RETRY)
@@ -80,55 +80,3 @@ def check_url(url, group=None):
         time.sleep(delay)
         attempts += 1
     return response.json()
-
-
-# TODO still needed?
-def check_url_from_cache(url, group=None):
-    """Check the given URL against the cache of a Croquemort server.
-
-    Return a tuple: (error, response).
-    """
-    CROQUEMORT = current_app.config.get('CROQUEMORT')
-    if CROQUEMORT is None:
-        return {'error': 'Check server not configured.'}, {}
-    retrieve_url = '{url}/url'.format(url=CROQUEMORT['url'])
-    try:
-        response = requests.get(retrieve_url,
-                                params={'url': url, 'group': group},
-                                timeout=TIMEOUT)
-    except requests.Timeout:
-        log.error(TIMEOUT_LOG_MSG, exc_info=True)
-        return {'error': CONNECTION_ERROR_MSG}, {}
-    except requests.RequestException:
-        log.error(ERROR_LOG_MSG, exc_info=True)
-        return {'error': CONNECTION_ERROR_MSG}, {}
-    if response.status_code == httplib.NOT_FOUND:
-        return {'error': 'URL {url} not found'.format(url=url)}, {}
-    else:
-        return {}, response.json()
-
-
-# TODO still needed?
-def check_url_from_group(group):
-    """Check the given group against the cache of a Croquemort server.
-
-    Return a tuple: (error, response).
-    """
-    CROQUEMORT = current_app.config.get('CROQUEMORT')
-    if CROQUEMORT is None:
-        return {'error': 'Check server not configured.'}, {}
-    retrieve_url = '{url}/group'.format(url=CROQUEMORT['url'])
-    try:
-        response = requests.get(retrieve_url,
-                                params={'group': group},
-                                timeout=TIMEOUT)
-    except requests.Timeout:
-        log.error(TIMEOUT_LOG_MSG, exc_info=True)
-        return {'error': CONNECTION_ERROR_MSG}, {}
-    except requests.RequestException:
-        log.error(ERROR_LOG_MSG, exc_info=True)
-        return {'error': CONNECTION_ERROR_MSG}, {}
-    if response.status_code == httplib.NOT_FOUND:
-        return {'error': 'Group {group} not found'.format(group=group)}, {}
-    else:
-        return {}, response.json()
