@@ -15,9 +15,9 @@ from udata.utils import faker
 
 from .checker import CroquemortLinkChecker
 
-CROQUEMORT_URL = 'http://check.test'
-CHECK_ONE_URL = '{0}/check/one'.format(CROQUEMORT_URL)
-METADATA_URL = '{0}/url'.format(CROQUEMORT_URL)
+CROQUEMORT_TEST_URL = 'http://check.test'
+CHECK_ONE_URL = '{0}/check/one'.format(CROQUEMORT_TEST_URL)
+METADATA_URL = '{0}/url'.format(CROQUEMORT_TEST_URL)
 
 
 def metadata_factory(url, data=None):
@@ -60,13 +60,9 @@ def exception_factory(exception):
 
 
 class CheckUrlSettings(Testing):
-    PLUGINS = []
-    LINKCHECKER_CACHE = 1
-    CROQUEMORT = {
-        'url': CROQUEMORT_URL,
-        'retry': 2,
-        'delay': 1,
-    }
+    CROQUEMORT_URL = CROQUEMORT_TEST_URL
+    CROQUEMORT_NB_RETRY = 2
+    CROQUEMORT_DELAY = 1
 
 
 class UdataCroquemortTest(TestCase):
@@ -113,6 +109,7 @@ class UdataCroquemortTest(TestCase):
                                content_type='application/json',
                                status=200)
         self.checker.check(self.resource)
+        self.assertTrue(len(httpretty.core.httpretty.latest_requests))
         post_request = httpretty.core.httpretty.latest_requests[0]
         self.assertEquals(json.loads(post_request.body), {
             'url': self.resource.url,

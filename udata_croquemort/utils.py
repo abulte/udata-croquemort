@@ -41,12 +41,12 @@ def check_url(url, group=None):
 
     Return a tuple: (error, response).
     """
-    CROQUEMORT = current_app.config.get('CROQUEMORT')
-    if CROQUEMORT is None:
+    CROQUEMORT_URL = current_app.config.get('CROQUEMORT_URL')
+    if CROQUEMORT_URL is None:
         raise UnreachableLinkChecker('Croquemort server not configured')
-    check_url = '{url}/check/one'.format(url=CROQUEMORT['url'])
-    delay = CROQUEMORT.get('delay', DEFAULT_DELAY)
-    retry = CROQUEMORT.get('retry', DEFAULT_RETRY)
+    check_url = '{url}/check/one'.format(url=CROQUEMORT_URL)
+    delay = current_app.config.get('CROQUEMORT_DELAY', DEFAULT_DELAY)
+    retry = current_app.config.get('CROQUEMORT_NB_RETRY', DEFAULT_RETRY)
     params = {'url': url, 'group': group}
     try:
         response = requests.post(check_url,
@@ -60,7 +60,7 @@ def check_url(url, group=None):
     try:
         url_hash = response.json()['url-hash']
         retrieve_url = '{url}/url/{url_hash}'.format(
-            url=CROQUEMORT['url'], url_hash=url_hash)
+            url=CROQUEMORT_URL, url_hash=url_hash)
     except ValueError:
         raise UnreachableLinkChecker('Wrong response for retrieve_url')
     response = None
