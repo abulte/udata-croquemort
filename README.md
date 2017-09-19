@@ -1,6 +1,6 @@
 # uData-croquemort
 
-This plugin provide integration between uData and Croquemort link checker.
+This plugin provides integration between uData and Croquemort link checker.
 
 ## Compatibility
 
@@ -22,12 +22,10 @@ Modify your local configuration file of **udata** (typically, `udata.cfg`) as fo
 
 ```python
 PLUGINS = ['croquemort']
-CROQUEMORT = {
-    'url': 'http://localhost:8000',
-    'delay': 1,
-    'retry': 10,
-}
-CROQUEMORT_IGNORE = []
+LINKCHECKING_DEFAULT_LINKCHECKER = 'croquemort'
+CROQUEMORT_URL = 'http://localhost:8000'
+CROQUEMORT_NB_RETRY = 10
+CROQUEMORT_DELAY = 1
 ```
 
 [uData]: https://github.com/opendatateam/udata

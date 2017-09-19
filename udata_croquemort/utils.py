@@ -30,10 +30,9 @@ def is_pending(response):
         return True
     if response.status_code == httplib.NOT_FOUND:
         return True
-    try:
-        return 'final-status-code' not in response.json()
-    except ValueError:
+    if 'final-status-code' not in response.json():
         return True
+    return False
 
 
 def check_url(url, group=None):

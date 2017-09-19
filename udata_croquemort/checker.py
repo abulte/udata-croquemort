@@ -61,4 +61,4 @@ class CroquemortLinkChecker(object):
         except UnreachableLinkChecker as e:
             log.error('Unreachable croquemort for url {}: {}'.format(
                       resource.url, e))
-            pass
+            return None
